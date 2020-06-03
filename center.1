@@ -1,0 +1,30 @@
+.Dd June 3, 2020
+.Dt CENTER 1
+.Os
+.Sh NAME
+.Nm center
+.Nd center a text file
+.Sh SYNOPSIS
+.Nm
+.Op Fl w Ar width
+.Sh DESCRIPTION
+Copies a file from standard input to standard output,
+indented with spaces to be horizontally centered in the terminal.
+.Pp
+The target width can be set with
+.Fl w Ar width
+and defaults to the
+.Ev COLUMNS
+environment variable, or 80 if unset.
+Tabs are converted to spaces.
+If the input stream does not support seeking
+it is first copied to an unnamed temporary file.
+.Sh EXAMPLES
+Display
+.Pa foo.txt
+centered in 72 columns:
+.Pp
+.Dl center -w 72 <foo.txt
+.Sh AUTHORS
+.An Sijmen J. Mulder
+.Aq Mt ik@sjmulder.nl
