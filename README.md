@@ -12,7 +12,7 @@ to an unnamed temporary file.
 
 Example
 -------
-    $ center -w 2 <hello.txt
+    $ center -w 72 <hello.txt
                                  Hello, World!
 
 Building
