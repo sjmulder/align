@@ -88,10 +88,9 @@ maxwidth(UFILE *f)
 
 	while ((c = u_fgetcx(f)) != U_EOF)
 		if (c == '\n') {
-			if (w > mw) {
+			w = 0;
+			if (w > mw)
 				mw = w;
-				w = 0;
-			}
 		} else if (c == '\t')
 			w = (w+8)/8 * 8;
 		else if (u_hasBinaryProperty(c, UCHAR_GRAPHEME_BASE))
