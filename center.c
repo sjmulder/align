@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unicode/ustdio.h>
+#include <unicode/uchar.h>
 #include <errno.h>
 #include <unistd.h>
 #include <err.h>
@@ -86,11 +87,15 @@ maxwidth(UFILE *f)
 	UChar32 c;
 
 	while ((c = u_fgetcx(f)) != U_EOF)
-		switch (c) {
-			case '\n': if (w > mw) mw = w; w = 0; break;
-			case '\t': w = (w+8)/8 * 8; break;
-			default: w++; break;
-		}
+		if (c == '\n') {
+			if (w > mw) {
+				mw = w;
+				w = 0;
+			}
+		} else if (c == '\t')
+			w = (w+8)/8 * 8;
+		else if (u_hasBinaryProperty(c, UCHAR_GRAPHEME_BASE))
+			w++;
 
 	return mw;
 }
