@@ -2,6 +2,7 @@ PREFIX?=	/usr/local
 MANDIR?=	man
 
 CFLAGS+=	-Wall -Wextra
+LDLIBS+=	-licuio
 
 all: center
 

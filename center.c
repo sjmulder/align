@@ -2,13 +2,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unicode/ustdio.h>
 #include <errno.h>
 #include <unistd.h>
 #include <err.h>
 
 static FILE *copytmp(FILE *);
-static int maxwidth(FILE *);
-static void center(FILE *, FILE *, int, int);
+static int maxwidth(UFILE *);
+static void center(UFILE *, UFILE *, int, int);
 
 int
 main(int argc, char *argv[])
@@ -18,6 +19,7 @@ main(int argc, char *argv[])
 	int outwidth = -1;
 	char *str;
 	FILE *input = stdin;
+	UFILE *uin, *uout;
 
 #if __OpenBSD__
 	if (pledge("stdio tmppath", NULL) == -1)
@@ -43,11 +45,16 @@ main(int argc, char *argv[])
 	if (fseek(input, SEEK_SET, 0) == -1)
 		input = copytmp(input);
 
-	inwidth = maxwidth(input);
+	if (!(uin = u_finit(input, NULL, NULL)))
+		errx(1, "u_finit(input) failed");
+	if (!(uout = u_finit(stdout, NULL, NULL)))
+		errx(1, "u_finit(stdout) failed");
+
+	inwidth = maxwidth(uin);
 	if (fseek(input, SEEK_SET, 0) == -1)
 		err(1, NULL);
 
-	center(input, stdout, inwidth, outwidth);
+	center(uin, uout, inwidth, outwidth);
 
 	return 0;
 }
@@ -73,40 +80,40 @@ copytmp(FILE *f)
 }
 
 static int
-maxwidth(FILE *f)
+maxwidth(UFILE *f)
 {
-	int c, w = 0, mw = 0;
+	int w=0, mw=0;
+	UChar32 c;
 
-	while ((c = fgetc(f)) != EOF)
+	while ((c = u_fgetcx(f)) != U_EOF)
 		switch (c) {
 			case '\n': if (w > mw) mw = w; w = 0; break;
 			case '\t': w = (w+8)/8 * 8; break;
 			default: w++; break;
 		}
-	if (ferror(f))
-		err(1, NULL);
 
 	return mw;
 }
 
 static void
-center(FILE *in, FILE *out, int inwidth, int outwidth)
+center(UFILE *in, UFILE *out, int inwidth, int outwidth)
 {
-	int i, c=0;
+	int i;
+	UChar32 c=0;
 
-	while ((c = getc(in)) != EOF) {
+	while ((c = u_fgetcx(in)) != U_EOF) {
 		if (c == '\n') {
-			fputc('\n', out);
+			u_fputc('\n', out);
 			continue;
 		}
 
 		for (i = 0; i < (outwidth-inwidth)/2; i++)
-			fputc(' ', out);
+			u_fputc(' ', out);
 		do {
 			if (c == '\t')
-				fputs("        ", out);
+				u_fprintf(out, "        ");
 			else
-				fputc(c, out);
-		} while (c != '\n' && (c = fgetc(in)) != EOF);
+				u_fputc(c, out);
+		} while (c != '\n' && (c = u_fgetcx(in)) != EOF);
 	}
 }
