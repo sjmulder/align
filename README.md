@@ -8,7 +8,8 @@ spaces to be horizontally centered in the terminal.
 The target width can be set with **-w** *width* and defaults to the
 `COLUMNS` environment variable, or 80 if unset. Tabs are converted to
 spaces. If the input stream does not support seeking it is first copied
-to an unnamed temporary file.
+to an unnamed temporary file. Unicode aware, but every grapheme is
+assumed to be one character wide.
 
 Example
 -------
