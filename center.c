@@ -38,11 +38,21 @@ main(int argc, char *argv[])
 		return -1;
 	}
 
+	/*
+	 * Use $COLUMNS as terminal width if no -w given, or 80 if
+	 * unset.
+	 */
 	if (outwidth < 0 && (str = getenv("COLUMNS")))
 		outwidth = strtol(str, NULL, 10);
 	if (outwidth < 0)
 		outwidth = 80;
 
+	/*
+	 * We're making 2 passes through the file, first to measure
+	 * line lengths, then for the output, so we must be able to
+	 * rewind. Test that. If we can't, copy the stream to a
+	 * temporary file.
+	 */
 	if (fseek(input, SEEK_SET, 0) == -1)
 		input = copytmp(input);
 
@@ -60,6 +70,10 @@ main(int argc, char *argv[])
 	return 0;
 }
 
+/*
+ * Copies the given file stream to a temporary, unlinked file and
+ * returns a handle to that file at pos 0.
+ */
 static FILE *
 copytmp(FILE *f)
 {
@@ -80,6 +94,11 @@ copytmp(FILE *f)
 	return tmp;
 }
 
+/*
+ * Goes through the given file, starting at the current position, and
+ * returns the character count of the longest line. Every grapheme
+ * is considered a single character. Does not rewind the file.
+ */
 static int
 maxwidth(UFILE *f)
 {
@@ -99,6 +118,11 @@ maxwidth(UFILE *f)
 	return mw;
 }
 
+/*
+ * Goes through the given input file and copies it to the given output
+ * file using spaces for indentation to center the text of width
+ * inwidth in a container of outwidth. Tabs are expanded.
+ */
 static void
 center(UFILE *in, UFILE *out, int inwidth, int outwidth)
 {
