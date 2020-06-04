@@ -2,15 +2,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unicode/ustdio.h>
-#include <unicode/uchar.h>
 #include <errno.h>
 #include <unistd.h>
 #include <err.h>
 
 static FILE *copytmp(FILE *);
-static int maxwidth(UFILE *);
-static void center(UFILE *, UFILE *, int, int);
+static int maxwidth(FILE *);
+static void center(FILE *, FILE *, int, int);
 
 int
 main(int argc, char *argv[])
@@ -20,7 +18,6 @@ main(int argc, char *argv[])
 	int outwidth = -1;
 	char *str;
 	FILE *input = stdin;
-	UFILE *uin, *uout;
 
 #if __OpenBSD__
 	if (pledge("stdio tmppath", NULL) == -1)
@@ -56,16 +53,11 @@ main(int argc, char *argv[])
 	if (fseek(input, SEEK_SET, 0) == -1)
 		input = copytmp(input);
 
-	if (!(uin = u_finit(input, NULL, NULL)))
-		errx(1, "u_finit(input) failed");
-	if (!(uout = u_finit(stdout, NULL, NULL)))
-		errx(1, "u_finit(stdout) failed");
-
-	inwidth = maxwidth(uin);
+	inwidth = maxwidth(input);
 	if (fseek(input, SEEK_SET, 0) == -1)
 		err(1, NULL);
 
-	center(uin, uout, inwidth, outwidth);
+	center(input, stdout, inwidth, outwidth);
 
 	return 0;
 }
@@ -100,20 +92,18 @@ copytmp(FILE *f)
  * is considered a single character. Does not rewind the file.
  */
 static int
-maxwidth(UFILE *f)
+maxwidth(FILE *f)
 {
-	int w=0, mw=0;
-	UChar32 c;
+	int c, w = 0, mw = 0;
 
-	while ((c = u_fgetcx(f)) != U_EOF)
-		if (c == '\n') {
-			if (w > mw)
-				mw = w;
-			w = 0;
-		} else if (c == '\t')
-			w = (w+8)/8 * 8;
-		else if (u_hasBinaryProperty(c, UCHAR_GRAPHEME_BASE))
-			w++;
+	while ((c = fgetc(f)) != EOF)
+		switch (c) {
+			case '\n': if (w > mw) mw = w; w = 0; break;
+			case '\t': w = (w+8)/8 * 8; break;
+			default: w++; break;
+		}
+	if (ferror(f))
+		err(1, NULL);
 
 	return mw;
 }
@@ -124,24 +114,23 @@ maxwidth(UFILE *f)
  * inwidth in a container of outwidth. Tabs are expanded.
  */
 static void
-center(UFILE *in, UFILE *out, int inwidth, int outwidth)
+center(FILE *in, FILE *out, int inwidth, int outwidth)
 {
-	int i;
-	UChar32 c=0;
+	int i, c=0;
 
-	while ((c = u_fgetcx(in)) != U_EOF) {
+	while ((c = getc(in)) != EOF) {
 		if (c == '\n') {
-			u_fputc('\n', out);
+			fputc('\n', out);
 			continue;
 		}
 
 		for (i = 0; i < (outwidth-inwidth)/2; i++)
-			u_fputc(' ', out);
+			fputc(' ', out);
 		do {
 			if (c == '\t')
-				u_fprintf(out, "        ");
+				fputs("        ", out);
 			else
-				u_fputc(c, out);
-		} while (c != '\n' && (c = u_fgetcx(in)) != EOF);
+				fputc(c, out);
+		} while (c != '\n' && (c = fgetc(in)) != EOF);
 	}
 }
