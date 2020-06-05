@@ -1,6 +1,6 @@
-center
-======
-**center** [**-w** *width*]
+align
+=====
+**align** [**-w** *width*]
 
 Copies a file from standard input to standard output, indented with
 spaces to be horizontally centered in the terminal.
@@ -12,7 +12,7 @@ to an unnamed temporary file.
 
 Example
 -------
-    $ center -w 72 <hello.txt
+    $ align -w 72 <hello.txt
                                  Hello, World!
 
 Building
