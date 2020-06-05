@@ -1,4 +1,4 @@
-.Dd June 3, 2020
+.Dd June 5, 2020
 .Dt ALIGN 1
 .Os
 .Sh NAME
@@ -31,9 +31,7 @@ and defaults to the
 .Ev COLUMNS
 environment variable, or 80 if unset.
 .Sh EXAMPLES
-The difference between block and line modes
-is best shown with an example.
-Centering a file in block mode:
+Centering a file block and per-line modes respectively:
 .Bd -literal -offset indent
 $ align -C <poem.txt
 
@@ -41,10 +39,7 @@ $ align -C <poem.txt
        The soul descended
        Speaking to its creator
        Greeting the world
-.Ed
-.Pp
-In line mode:
-.Bd -literal -offset indent
+
 $ align -c <poem.txt
 
           Into the machine

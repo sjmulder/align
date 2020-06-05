@@ -18,8 +18,7 @@ defaults to the COLUMNS environment variable, or 80 if unset.
 
 Examples
 --------
-The difference between block and line modes is best shown with an
-example. Centering a file in block mode:
+Centering a file in block and per-line modes respectively:
 
     $ align -C <poem.txt
 
@@ -27,8 +26,6 @@ example. Centering a file in block mode:
            The soul descended
            Speaking to its creator
            Greeting the world
-
-In line mode:
 
     $ align -c <poem.txt
 
