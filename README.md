@@ -1,19 +1,41 @@
 align
 =====
-**align** [**-w** *width*]
+**align** **-C**|**c**|**R**|**r** [**-w** *width*]
 
 Copies a file from standard input to standard output, indented with
 spaces to be horizontally centered in the terminal.
 
-The target width can be set with **-w** *width* and defaults to the
-`COLUMNS` environment variable, or 80 if unset. Tabs are converted to
-spaces. If the input stream does not support seeking it is first copied
-to an unnamed temporary file.
+Copies a file from standard input to standard output, indented with
+spaces to be centered or right-align, depending on the chosen mode:
+
+ - **-C**: Center as a block
+ - **-c**: Center per line
+ - **-R**: Right-align as a block
+ - **-r**: Right-align per line
+
+Tabs are expanded. The target width can be set with **-w** *width* and
+defaults to the COLUMNS environment variable, or 80 if unset.
 
 Example
 -------
-    $ align -w 72 <hello.txt
-                                 Hello, World!
+The difference between block and line modes is best shown with an
+example. Centering a file in block mode:
+
+    $ align -C <poem.txt
+
+           Into the machine
+           The soul descended
+           Speaking to its creator
+           Greeting the world
+
+In line mode:
+
+    $ align -c <poem.txt
+
+              Into the machine
+             The soul descended
+           Speaking to its creator
+             Greeting the world
 
 Building
 --------

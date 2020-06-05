@@ -3,28 +3,51 @@
 .Os
 .Sh NAME
 .Nm align
-.Nd center a text file
+.Nd center or right-align a text file
 .Sh SYNOPSIS
 .Nm
+.Fl C|c|R|r
 .Op Fl w Ar width
 .Sh DESCRIPTION
 Copies a file from standard input to standard output,
-indented with spaces to be horizontally centered in the terminal.
+indented with spaces to be centered or right-align, depending on
+the chosen mode:
 .Pp
+.Bl -column
+.It Fl C Ta Center as a block
+.It Fl c Ta Center per line
+.It Fl R Ta Right-align as a block
+.It Fl r Ta Right-align per line
+.El
+.Pp
+Tabs are expanded.
 The target width can be set with
 .Fl w Ar width
 and defaults to the
 .Ev COLUMNS
 environment variable, or 80 if unset.
-Tabs are converted to spaces.
-If the input stream does not support seeking
-it is first copied to an unnamed temporary file.
 .Sh EXAMPLES
-Display
-.Pa foo.txt
-centered in 72 columns:
+The difference between block and line modes
+is best shown with an example.
+Centering a file in block mode:
+.Bd -literal -offset indent
+$ align -C <poem.txt
+
+       Into the machine
+       The soul descended
+       Speaking to its creator
+       Greeting the world
+.Ed
 .Pp
-.Dl align -w 72 <foo.txt
+In line mode:
+.Bd -literal -offset indent
+$ align -c <poem.txt
+
+          Into the machine
+         The soul descended
+       Speaking to its creator
+         Greeting the world
+.Ed
 .Sh AUTHORS
 .An Sijmen J. Mulder
 .Aq Mt ik@sjmulder.nl
