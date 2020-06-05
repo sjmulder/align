@@ -7,65 +7,95 @@
 #include <err.h>
 
 static FILE *copytmp(FILE *);
-static int maxwidth(FILE *);
-static void center(FILE *, FILE *, int, int);
+static int getlnwidth(FILE *);
+
+/* Mode, e.g. M_CENTER | M_BLOCK */
+#define M_CENTER 0x01
+#define M_RIGHT  0x02
+#define M_BLOCK  0x10
+#define M_LINE   0x20
 
 int
 main(int argc, char *argv[])
 {
-	int c;
-	int inwidth;
-	int outwidth = -1;
+	int c, n, i;
+	int inwidth=0, outwidth=-1;
+	int mode=0;
+	int npad, fst=1;
 	char *str;
 	FILE *input = stdin;
+	fpos_t pos;
 
 #if __OpenBSD__
 	if (pledge("stdio tmppath", NULL) == -1)
 		err(1, "pledge");
 #endif
 
-	while ((c = getopt(argc, argv, "w:")) != -1)
+	while ((c = getopt(argc, argv, "CcRrw:")) != -1)
 		switch (c) {
+			case 'C': mode = M_CENTER | M_BLOCK; break;
+			case 'c': mode = M_CENTER | M_LINE;  break;
+			case 'R': mode = M_RIGHT  | M_BLOCK; break;
+			case 'r': mode = M_RIGHT  | M_LINE;  break;
 			case 'w': outwidth = atoi(optarg); break;
 			default: return -1;
 		}
 
-	if (argc > optind) {
-		fprintf(stderr, "usage: center [-w width]\n");
-		return -1;
-	}
+	if (!mode || argc > optind)
+		errx(1, "usage: align -C|c|R|r [-w width] <file");
 
-	/*
-	 * Use $COLUMNS as terminal width if no -w given, or 80 if
-	 * unset.
-	 */
+	/* Use $COLUMN as default with, or 80 if unset */
 	if (outwidth < 0 && (str = getenv("COLUMNS")))
 		outwidth = strtol(str, NULL, 10);
 	if (outwidth < 0)
 		outwidth = 80;
 
-	/*
-	 * We're making 2 passes through the file, first to measure
-	 * line lengths, then for the output, so we must be able to
-	 * rewind. Test that. If we can't, copy the stream to a
-	 * temporary file.
-	 */
+	/* We must be able to seek */
 	if (fseek(input, SEEK_SET, 0) == -1)
 		input = copytmp(input);
 
-	inwidth = maxwidth(input);
-	if (fseek(input, SEEK_SET, 0) == -1)
-		err(1, NULL);
+	if (mode & M_BLOCK) {
+		while (!feof(input))
+			if ((n = getlnwidth(input)) > inwidth)
+				inwidth = n;
+		if (fseek(input, SEEK_SET, 0) == -1)
+			err(1, NULL);
+	}
 
-	center(input, stdout, inwidth, outwidth);
+	while ((c = fgetc(input)) != EOF) {
+		if (fst) {
+			if (mode & M_LINE) {
+				if (fgetpos(input, &pos) == -1)
+					err(1, NULL);
+
+				/* +1 because we already read a char */
+				inwidth = getlnwidth(input) +1;
+
+				if (fsetpos(input, &pos) == -1)
+					err(1, NULL);
+			}
+
+			if ((npad = outwidth-inwidth) > 0) {
+				if (mode & M_CENTER)
+					npad = (npad+1)/2;
+				for (i = 0; i < npad; i++)
+					fputc(' ', stdout);
+			}
+
+			fst = 0;
+		}
+
+		switch (c) {
+			case '\t': fputs("        ", stdout); break;
+			case '\n': fputc(c, stdout); fst=1; break;
+			default:   fputc(c, stdout); break;
+		}
+	}
 
 	return 0;
 }
 
-/*
- * Copies the given file stream to a temporary, unlinked file and
- * returns a handle to that file at pos 0.
- */
+/* Makes a copy of the stream to an unnamed temporary file */
 static FILE *
 copytmp(FILE *f)
 {
@@ -86,51 +116,19 @@ copytmp(FILE *f)
 	return tmp;
 }
 
-/*
- * Goes through the given file, starting at the current position, and
- * returns the character count of the longest line. Every grapheme
- * is considered a single character. Does not rewind the file.
- */
+/* Scans a line and returns its width */
 static int
-maxwidth(FILE *f)
+getlnwidth(FILE *f)
 {
-	int c, w = 0, mw = 0;
+	int w=0, c;
 
-	while ((c = fgetc(f)) != EOF)
+	while ((c = fgetc(f)) != EOF && c != '\n')
 		switch (c) {
-			case '\n': if (w > mw) mw = w; w = 0; break;
 			case '\t': w = (w+8)/8 * 8; break;
 			default: w++; break;
 		}
 	if (ferror(f))
 		err(1, NULL);
 
-	return mw;
-}
-
-/*
- * Goes through the given input file and copies it to the given output
- * file using spaces for indentation to center the text of width
- * inwidth in a container of outwidth. Tabs are expanded.
- */
-static void
-center(FILE *in, FILE *out, int inwidth, int outwidth)
-{
-	int i, c=0;
-
-	while ((c = getc(in)) != EOF) {
-		if (c == '\n') {
-			fputc('\n', out);
-			continue;
-		}
-
-		for (i = 0; i < (outwidth-inwidth)/2; i++)
-			fputc(' ', out);
-		do {
-			if (c == '\t')
-				fputs("        ", out);
-			else
-				fputc(c, out);
-		} while (c != '\n' && (c = fgetc(in)) != EOF);
-	}
+	return w;
 }
