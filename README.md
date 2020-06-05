@@ -3,9 +3,6 @@ align
 **align** **-C**|**c**|**R**|**r** [**-w** *width*]
 
 Copies a file from standard input to standard output, indented with
-spaces to be horizontally centered in the terminal.
-
-Copies a file from standard input to standard output, indented with
 spaces to be centered or right-align, depending on the chosen mode:
 
  - **-C**: Center as a block
