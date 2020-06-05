@@ -16,8 +16,8 @@ spaces to be centered or right-align, depending on the chosen mode:
 Tabs are expanded. The target width can be set with **-w** *width* and
 defaults to the COLUMNS environment variable, or 80 if unset.
 
-Example
--------
+Examples
+--------
 The difference between block and line modes is best shown with an
 example. Centering a file in block mode:
 
