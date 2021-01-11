@@ -1,3 +1,10 @@
+align 1.1.1
+-----------
+11 January 2020
+
+ - Fixed length calculation for lines with leading tabs.
+ - Now using MANPREFIX convention in Makefile.
+
 align 1.1
 ---------
 5 June 2020
