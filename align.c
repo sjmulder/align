@@ -68,8 +68,8 @@ main(int argc, char *argv[])
 				if (fgetpos(input, &pos) == -1)
 					err(1, NULL);
 
-				/* +1 because we already read a char */
-				inwidth = getlnwidth(input) +1;
+				ungetc(c, input);
+				inwidth = getlnwidth(input);
 
 				if (fsetpos(input, &pos) == -1)
 					err(1, NULL);
